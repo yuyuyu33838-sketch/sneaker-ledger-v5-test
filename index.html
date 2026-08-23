@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f7f7fb">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+<title>球鞋账本 V5 Test 0.1.1</title>
+<link rel="stylesheet" href="style.css?v=0.1.1">
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div>
+      <small>V5 TEST · 本地测试环境</small>
+      <h1>经营概览</h1>
+    </div>
+    <button id="backupQuick">备份</button>
+  </header>
+
+  <main>
+    <section id="home" class="page active">
+      <div class="profit-card">
+        <div class="profit-top">
+          <span>本月利润</span>
+          <b id="monthProfit">¥0.00</b>
+        </div>
+        <div class="metric-grid">
+          <div><span>今日买入</span><b id="todayBuy">¥0.00</b></div>
+          <div><span>今日卖出</span><b id="todaySell">¥0.00</b></div>
+          <div><span>今日利润</span><b id="todayProfit">¥0.00</b></div>
+          <div><span>库存资产</span><b id="inventoryValue">¥0.00</b></div>
+        </div>
+      </div>
+
+      <div class="quick-grid">
+        <button id="openBuy" class="quick purple"><span>＋</span><b>买入</b></button>
+        <button id="goHoldings" class="quick blue"><span>▣</span><b>持仓</b></button>
+        <button id="goTransactions" class="quick green"><span>≡</span><b>流水</b></button>
+        <button id="goMe" class="quick orange"><span>⌁</span><b>我的</b></button>
+      </div>
+
+      <div class="section-head">
+        <h2>今日流水</h2><span id="todayCount">0 笔</span>
+      </div>
+      <div id="todayList" class="list empty">今天还没有记录</div>
+    </section>
+
+    <section id="holdings" class="page">
+      <div class="section-title">
+        <div><small>HOLDINGS</small><h2>我的持仓</h2></div>
+        <input id="holdingSearch" placeholder="搜索货号 / 商品 / 规格">
+      </div>
+      <div id="holdingList" class="holding-list empty">暂无持仓</div>
+    </section>
+
+    <section id="transactions" class="page">
+      <div class="section-title">
+        <div><small>LEDGER</small><h2>交易流水</h2></div>
+      </div>
+      <div class="filter-grid">
+        <input id="txnSearch" placeholder="搜索货号 / 商品 / 规格">
+        <select id="txnType">
+          <option value="all">全部类型</option>
+          <option value="buy">买入</option>
+          <option value="sell">卖出</option>
+        </select>
+      </div>
+      <div id="txnList" class="list empty">暂无流水</div>
+    </section>
+
+    <section id="me" class="page">
+      <div class="section-title">
+        <div><small>DATA</small><h2>我的</h2></div>
+      </div>
+      <div class="settings-card">
+        <h3>完整备份</h3>
+        <p>导出商品、图片、买入、卖出全部数据。换设备前先备份。</p>
+        <div class="settings-actions">
+          <button id="exportBackup">导出完整备份</button>
+          <label class="file-btn">导入完整备份<input id="importBackup" type="file" accept=".json,application/json"></label>
+        </div>
+        <div id="backupStatus"></div>
+      </div>
+
+      <div class="settings-card">
+        <h3>数据状态</h3>
+        <div class="status-grid">
+          <div><span>商品</span><b id="productCount">0</b></div>
+          <div><span>买入</span><b id="buyCount">0</b></div>
+          <div><span>卖出</span><b id="sellCount">0</b></div>
+          <div><span>持仓</span><b id="positionCount">0</b></div>
+        </div>
+      </div>
+
+      <div class="settings-card danger">
+        <h3>测试环境操作</h3>
+        <p>仅清空 V5 Test 本地数据，不影响正式版 V4.1。</p>
+        <button id="clearTestData" class="danger-btn">清空 V5 Test 数据</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="active" data-page="home">首页</button>
+    <button data-page="holdings">持仓</button>
+    <button data-page="transactions">流水</button>
+    <button data-page="me">我的</button>
+  </nav>
+</div>
+
+<dialog id="buyDialog">
+<form id="buyForm" class="sheet">
+  <div class="sheet-head">
+    <div><small>BUY</small><h2>买入</h2></div>
+    <button type="button" class="close" data-close="buyDialog">×</button>
+  </div>
+
+  <label>货号 / SKU
+    <input id="buySku" required autocomplete="off" placeholder="如 DD1391-100">
+    <div id="skuSuggestions" class="suggestions"></div>
+  </label>
+
+  <label>商品名称
+    <input id="buyName" required placeholder="第一次录入，之后自动记住">
+  </label>
+
+  <div class="two">
+    <label>品类
+      <select id="buyCategory">
+        <option>球鞋</option><option>服饰</option><option>包袋</option>
+        <option>手表</option><option>手机</option><option>潮玩</option><option>其他</option>
+      </select>
+    </label>
+    <label>规格
+      <input id="buyVariant" placeholder="42 / L / 256G 黑色">
+    </label>
+  </div>
+
+  <div class="image-box">
+    <div id="buyImagePreview" class="image-preview">暂无图片</div>
+    <div class="image-controls">
+      <label class="file-btn">上传商品图片<input id="buyImage" type="file" accept="image/*"></label>
+      <button type="button" id="removeBuyImage" class="ghost">移除图片</button>
+      <small>图片会压缩后保存在当前浏览器。</small>
+    </div>
+  </div>
+
+  <div class="two">
+    <label>买入单价<input id="buyPrice" type="number" step="0.01" min="0" required></label>
+    <label>数量<input id="buyQty" type="number" min="1" value="1" required></label>
+  </div>
+
+  <label>日期<input id="buyDate" type="date" required></label>
+  <button class="submit">确认买入</button>
+</form>
+</dialog>
+
+<dialog id="sellDialog">
+<form id="sellForm" class="sheet">
+  <div class="sheet-head">
+    <div><small>SELL</small><h2>卖出</h2></div>
+    <button type="button" class="close" data-close="sellDialog">×</button>
+  </div>
+
+  <div id="sellProductBox" class="sell-product"></div>
+  <input id="sellSku" type="hidden">
+  <input id="sellVariant" type="hidden">
+
+  <div class="two">
+    <label>卖出数量<input id="sellQty" type="number" min="1" value="1" required></label>
+    <label>实际到账<input id="sellNet" type="number" min="0" step="0.01" required></label>
+  </div>
+
+  <div class="profit-preview">
+    <span>预计利润</span><b id="sellProfit">¥0.00</b>
+  </div>
+
+  <label>日期<input id="sellDate" type="date" required></label>
+  <button class="submit">确认卖出</button>
+</form>
+</dialog>
+
+<script src="app.js?v=0.1.1"></script>
+</body>
+</html>
