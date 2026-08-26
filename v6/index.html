@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f7fb">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src https://spmmzimqhfcyqzwybcyp.supabase.co; media-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self' https://spmmzimqhfcyqzwybcyp.supabase.co">
+<title>Sneaker Ledger V6 Test</title>
+<link rel="stylesheet" href="style.css?v=0.1.0">
+</head>
+<body>
+<div id="toast" class="toast" role="status"></div>
+
+<section id="authView" class="auth-shell">
+  <div class="auth-card">
+    <div class="logo-mark">SL</div>
+    <div>
+      <div class="eyebrow">SNEAKER LEDGER · V6 TEST</div>
+      <h1>多账号采购中枢</h1>
+      <p>只同步你主动录入的采购经营数据，不读取淘宝、京东或支付应用。</p>
+    </div>
+    <form id="authForm" class="stack-form">
+      <label>邮箱<input id="authEmail" type="email" autocomplete="email" required placeholder="你的邮箱"></label>
+      <label>V6 登录密码<input id="authPassword" type="password" autocomplete="current-password" minlength="8" required placeholder="至少 8 位"></label>
+      <button id="signInBtn" class="primary-btn" type="submit">登录 V6</button>
+      <button id="signUpBtn" class="secondary-btn" type="button">首次使用：创建 V6 账号</button>
+    </form>
+    <small id="authHint" class="muted">这个密码只是 Sneaker V6 的登录密码，不是淘宝 / 京东 / 支付密码。</small>
+  </div>
+</section>
+
+<div id="appShell" class="app-shell hidden">
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">SNEAKER LEDGER · V6</div>
+      <h1>采购中枢</h1>
+    </div>
+    <div class="topbar-right">
+      <span id="networkBadge" class="pill">检查网络…</span>
+      <span id="deviceBadge" class="pill muted-pill">未绑定设备</span>
+    </div>
+  </header>
+
+  <main>
+    <section id="quickPage" class="page active">
+      <div class="page-title-row">
+        <div><span class="section-kicker">FAST ENTRY</span><h2>快速采购</h2></div>
+        <span id="syncBadge" class="sync-chip">待同步 0</span>
+      </div>
+
+      <section id="setupWarning" class="warning-card hidden">
+        <b>这台手机还没有绑定设备入口</b>
+        <p>先到「管理」里选择已有设备或创建 P01 / P02 之类的设备。</p>
+        <button class="secondary-btn compact" data-go="manage" type="button">去设置设备</button>
+      </section>
+
+      <section class="entry-card">
+        <div class="sticky-context">
+          <label>当前账号
+            <select id="currentAccount"><option value="">先选择账号</option></select>
+          </label>
+          <label>收货地
+            <select id="currentDestination"><option value="">未指定</option></select>
+          </label>
+        </div>
+
+        <label class="product-search-label">商品 / 快捷码
+          <input id="productSearch" autocomplete="off" placeholder="例如 43u / HE6MLTS43U">
+          <div id="productSuggestions" class="suggestions hidden"></div>
+        </label>
+        <div id="selectedProduct" class="selected-product hidden"></div>
+
+        <div>
+          <div class="field-label">规格</div>
+          <div id="variantButtons" class="variant-buttons"></div>
+          <input id="manualVariant" class="manual-variant" autocomplete="off" placeholder="没有预设规格时手动输入">
+        </div>
+
+        <div class="two-col">
+          <label>数量<input id="purchaseQty" type="number" min="0.01" step="0.01" value="1"></label>
+          <label>实付总额<input id="purchasePaid" type="number" min="0" step="0.01" inputmode="decimal" placeholder="298.60"></label>
+        </div>
+
+        <button id="savePurchase" class="primary-btn big-save" type="button">保存采购</button>
+        <div class="micro-note">保存后保留当前账号、收货地和商品，只清空规格与金额；数量恢复为 1。</div>
+      </section>
+
+      <div class="section-head"><div><span class="section-kicker">RECENT</span><h3>最近采购</h3></div><button class="text-btn" data-go="ledger" type="button">看总账 ›</button></div>
+      <div id="recentPurchases" class="record-list empty">还没有采购记录</div>
+    </section>
+
+    <section id="ledgerPage" class="page">
+      <div class="page-title-row"><div><span class="section-kicker">CENTRAL LEDGER</span><h2>中央总账</h2></div><button id="refreshData" class="secondary-btn compact" type="button">刷新</button></div>
+      <section class="filter-card">
+        <label>账号<select id="ledgerAccount"><option value="">全部账号</option></select></label>
+        <label>商品<select id="ledgerProduct"><option value="">全部商品</option></select></label>
+      </section>
+      <section class="stat-grid">
+        <article><span>采购件数</span><strong id="ledgerQty">0</strong></article>
+        <article><span>采购实付</span><strong id="ledgerPaid">¥0.00</strong></article>
+        <article><span>记录笔数</span><strong id="ledgerCount">0</strong></article>
+      </section>
+      <div id="ledgerList" class="record-list empty">暂无数据</div>
+    </section>
+
+    <section id="managePage" class="page">
+      <div class="page-title-row"><div><span class="section-kicker">SETUP</span><h2>设备与账号</h2></div></div>
+
+      <section class="manage-card">
+        <div class="manage-title"><h3>① 当前设备入口</h3><span id="currentDeviceText">未设置</span></div>
+        <label>选择已有设备<select id="deviceSelect"><option value="">请选择</option></select></label>
+        <div class="inline-form">
+          <input id="newDeviceCode" maxlength="40" placeholder="例如 P01">
+          <input id="newDeviceName" maxlength="80" placeholder="备注，例如 小米采购机">
+          <button id="addDevice" class="secondary-btn compact" type="button">新增设备</button>
+        </div>
+        <p class="muted">设备只是入口；账号才是主要统计维度。以后换手机，只需重新绑定账号。</p>
+      </section>
+
+      <section class="manage-card">
+        <div class="manage-title"><h3>② 采购账号</h3><span id="accountCount">0 个</span></div>
+        <div class="inline-form account-form">
+          <select id="newAccountPlatform"><option value="taobao">淘宝</option><option value="jd">京东</option></select>
+          <input id="newAccountName" maxlength="80" placeholder="个性化昵称">
+          <button id="addAccount" class="secondary-btn compact" type="button">新增账号</button>
+        </div>
+        <div id="accountList" class="manage-list empty">还没有账号</div>
+      </section>
+
+      <section class="manage-card">
+        <div class="manage-title"><h3>③ 收货地标签</h3><span id="destinationCount">0 个</span></div>
+        <div class="inline-form">
+          <input id="newDestinationCode" maxlength="40" placeholder="CS-A">
+          <input id="newDestinationName" maxlength="80" placeholder="长沙A / 邵阳A">
+          <button id="addDestination" class="secondary-btn compact" type="button">新增地点</button>
+        </div>
+        <div id="destinationList" class="manage-list empty">还没有收货地</div>
+      </section>
+
+      <section class="manage-card">
+        <div class="manage-title"><h3>④ 商品字典</h3><span id="productCount">0 个</span></div>
+        <div class="product-form-grid">
+          <input id="newProductSku" maxlength="100" placeholder="完整货号，例如 HE6MLTS43U">
+          <input id="newProductShortcut" maxlength="40" placeholder="快捷码，例如 43u">
+          <input id="newProductBrand" maxlength="100" placeholder="品牌，可选">
+          <input id="newProductName" maxlength="180" placeholder="商品名称">
+          <input id="newProductVariants" maxlength="300" placeholder="规格：M,L,XL,2XL">
+          <button id="addProduct" class="secondary-btn compact" type="button">新增商品</button>
+        </div>
+        <div id="productList" class="manage-list empty">还没有商品</div>
+      </section>
+
+      <section class="manage-card danger-lite">
+        <div class="manage-title"><h3>登录与安全</h3><span id="userEmailText">—</span></div>
+        <p class="muted">前端只使用 Supabase publishable key；数据库表全部启用 RLS，不保存淘宝 / 京东 / 支付密码。</p>
+        <button id="signOutBtn" class="secondary-btn compact" type="button">退出 V6</button>
+      </section>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="active" data-page="quick" type="button"><span>＋</span><b>采购</b></button>
+    <button data-page="ledger" type="button"><span>▤</span><b>总账</b></button>
+    <button data-page="manage" type="button"><span>⚙</span><b>管理</b></button>
+  </nav>
+</div>
+
+<script src="config.js?v=0.1.0"></script>
+<script src="app.js?v=0.1.0"></script>
+</body>
+</html>
